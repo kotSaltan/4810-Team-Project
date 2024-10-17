@@ -5,7 +5,7 @@
 # Carlos Henrique
 # Alexandra Schweig
 
-
+# https://archive.ics.uci.edu/dataset/925/infrared+thermography+temperature+dataset
 # Load the dataset, skipping first 2 rows (incorrect headers)
 data <- read.csv("data/FLIR_groups1and2.csv", header = FALSE, skip = 2)
 
