@@ -18,3 +18,8 @@ data <- data[-1, ]
 head(data)
 names(data)
 str(data)
+
+# Remove columns that are entirely NA
+data_clean <- data[, colSums(is.na(data)) != nrow(data)]
+
+head(data_clean)
