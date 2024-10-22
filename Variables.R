@@ -1,21 +1,38 @@
 # Load the data in 4 groups ####
 
+
 # FLIR (Forward-Looking Infrared) Groups:
 # The dataset includes data captured using the FLIR thermography camera.
 # FLIR Group 1: Ambient Temp 20-24°C, Relative Humidity: 10–62%
 # FLIR Group 2: Ambient Temp 24-29°C, Relative Humidity: 10–62%
 
+
+
 # Load and clean FLIR Group 1
 flir_group1 <- read.csv("data/FLIR_group1.csv", header = FALSE, skip = 2)
 colnames(flir_group1) <- flir_group1[1, ]
 flir_group1 <- flir_group1[-1, ]
+
+# Replace empty strings or spaces with NA
+flir_group1[flir_group1 == "" | flir_group1 == " "] <- NA
+
+# Remove columns where all values are NA
 flir_group1_clean <- flir_group1[, colSums(is.na(flir_group1)) != nrow(flir_group1)]
+
+
 
 # Load and clean FLIR Group 2
 flir_group2 <- read.csv("data/FLIR_group2.csv", header = FALSE, skip = 2)
 colnames(flir_group2) <- flir_group2[1, ]
 flir_group2 <- flir_group2[-1, ]
+
+# Replace empty strings or spaces with NA
+flir_group2[flir_group2 == "" | flir_group2 == " "] <- NA
+
+# Remove columns where all values are NA
 flir_group2_clean <- flir_group2[, colSums(is.na(flir_group2)) != nrow(flir_group2)]
+
+
 
 # ICI (Infrared Cameras Inc.) Groups:
 # ICI Group 1: Ambient Temp 20-24°C
@@ -25,13 +42,26 @@ flir_group2_clean <- flir_group2[, colSums(is.na(flir_group2)) != nrow(flir_grou
 ici_group1 <- read.csv("data/ICI_group1.csv", header = FALSE, skip = 2)
 colnames(ici_group1) <- ici_group1[1, ]
 ici_group1 <- ici_group1[-1, ]
+
+# Replace empty strings or spaces with NA
+ici_group1[ici_group1 == "" | ici_group1 == " "] <- NA
+
+# Remove columns where all values are NA
 ici_group1_clean <- ici_group1[, colSums(is.na(ici_group1)) != nrow(ici_group1)]
+
+
 
 # Load and clean ICI Group 2
 ici_group2 <- read.csv("data/ICI_group2.csv", header = FALSE, skip = 2)
 colnames(ici_group2) <- ici_group2[1, ]
 ici_group2 <- ici_group2[-1, ]
+
+# Replace empty strings or spaces with NA
+ici_group2[ici_group2 == "" | ici_group2 == " "] <- NA
+
+# Remove columns where all values are NA
 ici_group2_clean <- ici_group2[, colSums(is.na(ici_group2)) != nrow(ici_group2)]
+
 
 
 #### Check the structure and column names of the cleaned datasets ####
@@ -143,11 +173,12 @@ flir_group2_clean <- convert_oral_vars(flir_group2_clean)
 ici_group1_clean <- convert_oral_vars(ici_group1_clean)
 ici_group2_clean <- convert_oral_vars(ici_group2_clean)
 
-# Convert Gender, Age, and Ethnicity to factors
+# Convert Gender, Age, Ethnicity and Cosmetics to factors
 convert_factors <- function(data) {
   data$Gender <- as.factor(data$Gender)
   data$Age <- as.factor(data$Age)
   data$Ethnicity <- as.factor(data$Ethnicity)
+  data$Cosmetics <- as.factor(data$Cosmetics)
   return(data)
 }
 
@@ -199,3 +230,78 @@ summary(ici_group1_clean$Date)
 
 summary(ici_group2_clean$Time)
 summary(ici_group2_clean$Date)
+
+
+
+#### Handling the NA values ####
+
+library(naniar)
+
+# Visualize missing data for each dataset
+vis_miss(flir_group1_clean)
+vis_miss(flir_group2_clean)
+vis_miss(ici_group1_clean)
+vis_miss(ici_group2_clean)
+
+
+
+#### Function to check unique levels for categorical variables ####
+
+check_categorical_levels <- function(data) {
+  for (column in colnames(data)) {
+    
+    # If the column is a factor, print its unique levels and number of NA values
+    
+    if (is.factor(data[[column]])) {
+      cat("\nUnique values in", column, ":\n")
+      print(unique(data[[column]]))
+      cat("Number of NAs in", column, ":\n")
+      print(sum(is.na(data[[column]])))
+    }
+  }
+  return(data)
+}
+
+# Apply to all datasets
+
+# For FLIR Group 1
+cat("FLIR Group 1:\n")
+flir_group1_clean <- check_categorical_levels(flir_group1_clean)
+
+# For FLIR Group 2
+cat("\nFLIR Group 2:\n")
+flir_group2_clean <- check_categorical_levels(flir_group2_clean)
+
+# For ICI Group 1
+cat("\nICI Group 1:\n")
+ici_group1_clean <- check_categorical_levels(ici_group1_clean)
+
+# For ICI Group 2
+cat("\nICI Group 2:\n")
+ici_group2_clean <- check_categorical_levels(ici_group2_clean)
+
+
+
+#### Removing rows with missing values ####
+
+# complete.cases to remove rows that contain any missing values from each dataset
+flir_group1_clean <- flir_group1_clean[complete.cases(flir_group1_clean), ]
+flir_group2_clean <- flir_group2_clean[complete.cases(flir_group2_clean), ]
+ici_group1_clean <- ici_group1_clean[complete.cases(ici_group1_clean), ]
+ici_group2_clean <- ici_group2_clean[complete.cases(ici_group2_clean), ]
+
+# Count the number of remaining NA values
+cat("\nRemaining NA counts:\n")
+cat("FLIR Group 1: ", sum(is.na(flir_group1_clean)), "\n")
+cat("FLIR Group 2: ", sum(is.na(flir_group2_clean)), "\n")
+cat("ICI Group 1: ", sum(is.na(ici_group1_clean)), "\n")
+cat("ICI Group 2: ", sum(is.na(ici_group2_clean)), "\n")
+
+#### Final structure check ####
+
+# Check the structure of the cleaned datasets after removing rows with missing values
+cat("\nFinal structure of datasets:\n")
+str(flir_group1_clean) # Expected: 509 rows, ~7% NAs before removal
+str(flir_group2_clean) # Expected: 450 rows, ~5.5% NAs before removal
+str(ici_group1_clean)  # Expected: 364 rows, ~32% NAs before removal
+str(ici_group2_clean)  # Expected: 305 rows, ~35% NAs before removal
