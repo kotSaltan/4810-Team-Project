@@ -70,7 +70,8 @@ sum(is.na(ici_group2_long))
 # 
 # 
 # # Scatterplot matrix
-# pairs(~ aveOralF + aveOralM + T_atm + Humidity + Distance, data = flir_group1_long)
+pairs(~ aveOralF + aveOralM + T_atm +Max1R13_+ Max1L13_+  
+     RCC+ LCC+  T_FH_Max+ T_Max+ T_OR_Max + Humidity + Distance, data = flir_group1_long)
 
 
 
@@ -84,3 +85,41 @@ summary(mlr_model_F)
 mlr_model_M <- lm(aveOralM ~ T_atm + Humidity + Distance + Gender + Age + Ethnicity + 
                   T_LC + T_RC + Max1R13_ + Max1L13_ + T_FH_Max + T_LC_Max, data = flir_group1_long)
 summary(mlr_model_M)
+
+
+Gender + Age + Ethnicity + T_atm + Humidity + Distance + Cosmetics +      
+T_offset + Max1R13_ + Max1L13_ + aveAllR13_ + aveAllL13_ + T_RC + T_RC_Dry + T_RC_Wet + T_RC_Max + T_LC + T_LC_Dry + T_LC_Wet + T_LC_Max + 
+RCC + LCC + canthiMax + canthi4Max + T_FHCC + T_FHRC + T_FHLC + T_FHBC + T_FHTC + T_FH_Max + T_FHC_Max + T_Max + T_OR + T_OR_Max 
+
+mlr_model_F_all <- lm(aveOralF ~ Gender + Age + Ethnicity + T_atm + Humidity + Distance + Cosmetics +      
+                    T_offset + Max1R13_ + Max1L13_ + aveAllR13_ + aveAllL13_ + T_RC + T_RC_Dry + T_RC_Wet + T_RC_Max + T_LC + T_LC_Dry + T_LC_Wet + T_LC_Max + 
+                    RCC + LCC + canthiMax + canthi4Max + T_FHCC + T_FHRC + T_FHLC + T_FHBC + T_FHTC + T_FH_Max + T_FHC_Max + T_Max + T_OR + T_OR_Max , data = flir_group1_long)
+summary(mlr_model_F_all)
+
+
+mlr_model_F_noT_Max <- lm(aveOralF ~ Gender + Age + Ethnicity + T_atm + Humidity + Distance + Cosmetics +      
+                        T_offset + Max1R13_ + Max1L13_ + aveAllR13_ + aveAllL13_ + T_RC + T_RC_Dry + T_RC_Wet + T_RC_Max + T_LC + T_LC_Dry + T_LC_Wet + T_LC_Max + 
+                        RCC + LCC + canthiMax + canthi4Max + T_FHCC + T_FHRC + T_FHLC + T_FHBC + T_FHTC + T_FH_Max + T_FHC_Max  + T_OR + T_OR_Max , data = flir_group1_long)
+summary(mlr_model_F_noT_Max)
+
+
+library(MASS)
+stepAIC(lm(aveOralF~ . , data = flir_group1_long), direction = "both")
+
+step(lm(aveOralF~ . , data = flir_group1_long), direction = "both")
+
+# 
+# library(leaps)
+# model = regsubsets(aveOralF ~ Gender + Age + Ethnicity + T_atm + Humidity + Distance + Cosmetics +      
+#                       T_offset + Max1R13_ + Max1L13_ + aveAllR13_ + aveAllL13_ + T_RC + T_RC_Dry + T_RC_Wet + T_RC_Max + T_LC + T_LC_Dry + T_LC_Wet + T_LC_Max + 
+#                       RCC + LCC + canthiMax + canthi4Max + T_FHCC + T_FHRC + T_FHLC + T_FHBC + T_FHTC + T_FH_Max + T_FHC_Max + T_Max + T_OR + T_OR_Max , data = flir_group1_long,
+#                     nvmax=25)
+# summary(model)
+# 
+# cbind(SUM$which, round(cbind(Rsq, AdRsq, CP, BIC, RSS, AIC, PRESS, MSE), 4))
+
+
+m1 <- lm(aveOralF ~ SubjectID + Max1L13_ + T_LC_Wet + T_LC_Max + 
+     LCC + canthiMax + T_FHCC + T_FHRC + T_FHBC + T_FH_Max + T_Max + 
+     T_OR_Max, data = flir_group1_long)
+summary(m1)

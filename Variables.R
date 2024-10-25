@@ -100,9 +100,13 @@ overlap_ici1_ici2 <- intersect(ici_group1_clean$SubjectID, ici_group2_clean$Subj
 # Print overlaps
 overlap_flir1_flir2
 overlap_flir1_ici1
+summary(overlap_flir1_ici1)
+
 overlap_flir1_ici2
 overlap_flir2_ici1
 overlap_flir2_ici2
+summary(overlap_flir2_ici2)
+
 overlap_ici1_ici2
 
 
@@ -301,7 +305,7 @@ cat("ICI Group 2: ", sum(is.na(ici_group2_clean)), "\n")
 
 # Check the structure of the cleaned datasets after removing rows with missing values
 cat("\nFinal structure of datasets:\n")
-str(flir_group1_clean) # Expected: 509 rows, ~7% NAs before removal
-str(flir_group2_clean) # Expected: 450 rows, ~5.5% NAs before removal
-str(ici_group1_clean)  # Expected: 364 rows, ~32% NAs before removal
-str(ici_group2_clean)  # Expected: 305 rows, ~35% NAs before removal
+str(flir_group1_clean) # Expected: 488 rows, ~7% NAs before removal
+str(flir_group2_clean) # Expected: 445 rows, ~5.5% NAs before removal
+str(ici_group1_clean)  # Expected: 342 rows, ~32% NAs before removal
+str(ici_group2_clean)  # Expected: 299 rows, ~35% NAs before removal
