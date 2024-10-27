@@ -123,6 +123,7 @@ n5=qpcR::PRESS(m5)
 a5=n5$stat
 b5=s5$sigma
 n6=qpcR::PRESS(m6)
+
 a6=n6$stat
 b6=s6$sigma
 n7=qpcR::PRESS(m7)
