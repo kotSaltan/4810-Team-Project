@@ -59,37 +59,27 @@ sum(is.na(ici_group2_long))
 
 
 
-# Scatterplot matrix
-pairs(~ aveOralF + aveOralM + T_atm +Max1R13_+ Max1L13_+  
-     RCC+ LCC+  T_FH_Max+ T_Max+ T_OR_Max + Humidity + Distance, data = flir_group1_long)
+
+
+# Check the T_atm range for each dataset
+summary(flir_group1_long$T_atm)  # Expected: 20-24°C
+summary(flir_group2_long$T_atm)  # Expected: 24-29°C
+summary(ici_group1_long$T_atm)   # Expected: 20-24°C
+summary(ici_group2_long$T_atm)   # Expected: 24-29°C
 
 
 
+# Add T_atm category based on group
+flir_group1_long$T_atm_category <- "20-24°C"
+flir_group2_long$T_atm_category <- "24-29°C"
+ici_group1_long$T_atm_category <- "20-24°C"
+ici_group2_long$T_atm_category <- "24-29°C"
 
-# mlr_model_F <- lm(aveOralF ~ T_atm + Humidity + Distance + Gender + Age + Ethnicity + 
-#                   T_LC + T_RC + Max1R13_ + Max1L13_ + T_FH_Max + T_LC_Max, data = flir_group1_long)
-# summary(mlr_model_F)
-# 
-# 
-# 
-# mlr_model_M <- lm(aveOralM ~ T_atm + Humidity + Distance + Gender + Age + Ethnicity + 
-#                   T_LC + T_RC + Max1R13_ + Max1L13_ + T_FH_Max + T_LC_Max, data = flir_group1_long)
-# summary(mlr_model_M)
-# 
-# 
-# Gender + Age + Ethnicity + T_atm + Humidity + Distance + Cosmetics +      
-# T_offset + Max1R13_ + Max1L13_ + aveAllR13_ + aveAllL13_ + T_RC + T_RC_Dry + T_RC_Wet + T_RC_Max + T_LC + T_LC_Dry + T_LC_Wet + T_LC_Max + 
-# RCC + LCC + canthiMax + canthi4Max + T_FHCC + T_FHRC + T_FHLC + T_FHBC + T_FHTC + T_FH_Max + T_FHC_Max + T_Max + T_OR + T_OR_Max 
-# 
-# mlr_model_F_all <- lm(aveOralF ~ Gender + Age + Ethnicity + T_atm + Humidity + Distance + Cosmetics +      
-#                     T_offset + Max1R13_ + Max1L13_ + aveAllR13_ + aveAllL13_ + T_RC + T_RC_Dry + T_RC_Wet + T_RC_Max + T_LC + T_LC_Dry + T_LC_Wet + T_LC_Max + 
-#                     RCC + LCC + canthiMax + canthi4Max + T_FHCC + T_FHRC + T_FHLC + T_FHBC + T_FHTC + T_FH_Max + T_FHC_Max + T_Max + T_OR + T_OR_Max , data = flir_group1_long)
-# summary(mlr_model_F_all)
-# 
-# 
-# mlr_model_F_noT_Max <- lm(aveOralF ~ Gender + Age + Ethnicity + T_atm + Humidity + Distance + Cosmetics +      
-#                         T_offset + Max1R13_ + Max1L13_ + aveAllR13_ + aveAllL13_ + T_RC + T_RC_Dry + T_RC_Wet + T_RC_Max + T_LC + T_LC_Dry + T_LC_Wet + T_LC_Max + 
-#                         RCC + LCC + canthiMax + canthi4Max + T_FHCC + T_FHRC + T_FHLC + T_FHBC + T_FHTC + T_FH_Max + T_FHC_Max  + T_OR + T_OR_Max , data = flir_group1_long)
-# summary(mlr_model_F_noT_Max)
+# Combine FLIR and ICI datasets 
+flir_combined <- rbind(flir_group1_long, flir_group2_long)
+ici_combined <- rbind(ici_group1_long, ici_group2_long)
 
 
+# Check the combined dataset
+head(flir_combined)
+head(ici_combined)
