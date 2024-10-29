@@ -84,3 +84,5 @@ ici_combined <- rbind(ici_group1_long, ici_group2_long)
 # Check the combined dataset
 head(flir_combined)
 head(ici_combined)
+names(flir_combined)
+names(ici_combined)
