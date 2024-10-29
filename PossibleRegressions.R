@@ -5,11 +5,10 @@ head(flir_group1_long)
 #install.packages("leaps")
 library(leaps)
 library(MASS)
-
-Cosmetics<- as.numeric(as.character(Cosmetics))
+detach(flir_combined)
 
 # Model with some variables of my choosing
-M1=lm(aveOralM~Humidity+T_atm+Distance+Cosmetics+T_FH_Max+T_FHC_Max+canthiMax+T_Max)
+M1=lm(aveOralM~Humidity+T_atm+Distance+T_FH_Max+T_FHC_Max+canthiMax+T_Max)
 summary(M1)
 
 #----------------------
