@@ -169,6 +169,7 @@ str(ici_group2_clean)
 convert_oral_vars <- function(data) {
   data$aveOralF <- as.numeric(data$aveOralF)
   data$aveOralM <- as.numeric(data$aveOralM)
+  data$Cosmetics <- as.numeric(data$Cosmetics)
   return(data)
 }
 
@@ -182,7 +183,6 @@ convert_factors <- function(data) {
   data$Gender <- as.factor(data$Gender)
   data$Age <- as.factor(data$Age)
   data$Ethnicity <- as.factor(data$Ethnicity)
-  data$Cosmetics <- as.factor(data$Cosmetics)
   return(data)
 }
 
