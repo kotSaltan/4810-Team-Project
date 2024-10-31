@@ -61,28 +61,72 @@ sum(is.na(ici_group2_long))
 
 
 
-# Check the T_atm range for each dataset
-summary(flir_group1_long$T_atm)  # Expected: 20-24°C
-summary(flir_group2_long$T_atm)  # Expected: 24-29°C
-summary(ici_group1_long$T_atm)   # Expected: 20-24°C
-summary(ici_group2_long$T_atm)   # Expected: 24-29°C
+
+
+# Find same subject ID's in flir and ici groups 1
+common_subjects_1 <- intersect(flir_group1_long$SubjectID, ici_group1_long$SubjectID)
+flir_group1_long_filtered <- dplyr::filter(flir_group1_long, SubjectID %in% common_subjects_1)
+ici_group1_long_filtered <- dplyr::filter(ici_group1_long, SubjectID %in% common_subjects_1)
+
+
+# Find same subject ID's in flir and ici groups 2
+common_subjects_2 <- intersect(flir_group2_long$SubjectID, ici_group2_long$SubjectID)
+flir_group2_long_filtered <- dplyr::filter(flir_group2_long, SubjectID %in% common_subjects_2)
+ici_group2_long_filtered <- dplyr::filter(ici_group2_long, SubjectID %in% common_subjects_2)
+
+# T_atm_category based on group (later can combine groups 1 and 2 keeping the categorical ambient variable)
+flir_group1_long_filtered$T_atm_category <- factor("20-24°C", levels = c("20-24°C", "24-29°C"))
+ici_group1_long_filtered$T_atm_category <- factor("20-24°C", levels = c("20-24°C", "24-29°C"))
+flir_group2_long_filtered$T_atm_category <- factor("24-29°C", levels = c("20-24°C", "24-29°C"))
+ici_group2_long_filtered$T_atm_category <- factor("24-29°C", levels = c("20-24°C", "24-29°C"))
+
+head(flir_group1_long_filtered)
+head(ici_group1_long_filtered)
+head(flir_group2_long_filtered)
+head(ici_group2_long_filtered)
+
+# NOTE, missing values were not removed here (complete.cases) 
+summary(flir_group1_long_filtered)
+summary(ici_group1_long_filtered)
+summary(flir_group2_long_filtered)
+summary(ici_group2_long_filtered)
 
 
 
-# Add T_atm category based on group and set as factor
-flir_group1_long$T_atm_category <- factor("20-24°C", levels = c("20-24°C", "24-29°C"))
-flir_group2_long$T_atm_category <- factor("24-29°C", levels = c("20-24°C", "24-29°C"))
-ici_group1_long$T_atm_category <- factor("20-24°C", levels = c("20-24°C", "24-29°C"))
-ici_group2_long$T_atm_category <- factor("24-29°C", levels = c("20-24°C", "24-29°C"))
-
-# Combine FLIR and ICI datasets 
-flir_combined <- rbind(flir_group1_long, flir_group2_long)
-ici_combined <- rbind(ici_group1_long, ici_group2_long)
 
 
 
-# Check the combined dataset
-head(flir_combined)
-head(ici_combined)
-names(flir_combined)
-names(ici_combined)
+
+
+
+
+
+
+# 
+# 
+# 
+# # Check the T_atm range for each dataset
+# summary(flir_group1_long$T_atm)  # Expected: 20-24°C
+# summary(flir_group2_long$T_atm)  # Expected: 24-29°C
+# summary(ici_group1_long$T_atm)   # Expected: 20-24°C
+# summary(ici_group2_long$T_atm)   # Expected: 24-29°C
+# 
+# 
+# 
+# # Add T_atm category based on group and set as factor
+# flir_group1_long$T_atm_category <- factor("20-24°C", levels = c("20-24°C", "24-29°C"))
+# flir_group2_long$T_atm_category <- factor("24-29°C", levels = c("20-24°C", "24-29°C"))
+# ici_group1_long$T_atm_category <- factor("20-24°C", levels = c("20-24°C", "24-29°C"))
+# ici_group2_long$T_atm_category <- factor("24-29°C", levels = c("20-24°C", "24-29°C"))
+# 
+# # Combine FLIR and ICI datasets 
+# flir_combined <- rbind(flir_group1_long, flir_group2_long)
+# ici_combined <- rbind(ici_group1_long, ici_group2_long)
+# 
+# 
+# 
+# # Check the combined dataset
+# head(flir_combined)
+# head(ici_combined)
+# names(flir_combined)
+# names(ici_combined)
