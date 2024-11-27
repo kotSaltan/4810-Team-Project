@@ -1,0 +1,643 @@
+---
+title: "Untitled"
+output: html_document
+date: "2024-11-21"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# EDA
+
+# FLIR (Forward-Looking Infrared) Groups:
+
+The dataset includes data captured using the FLIR thermography camera:
+ 
+ - FLIR Group 1: Ambient Temp 20-24°C, Relative Humidity: 10–62%
+ 
+ - FLIR Group 2: Ambient Temp 24-29°C, Relative Humidity: 10–62%
+ 
+ 
+### Load and clean FLIR GROUP 1
+```{r}
+flir_group1 <- read.csv("FLIR_group1.csv", header = FALSE, skip = 2)
+colnames(flir_group1) <- flir_group1[1, ]
+flir_group1 <- flir_group1[-1, ]
+
+# Replace empty strings or spaces with NA
+flir_group1[flir_group1 == "" | flir_group1 == " "] <- NA
+
+# Remove columns where all values are NA
+flir_group1_clean <- flir_group1[, colSums(is.na(flir_group1)) != nrow(flir_group1)]
+```
+
+
+### Load and clean FLIR GROUP 2
+```{r}
+flir_group2 <- read.csv("FLIR_group2.csv", header = FALSE, skip = 2)
+colnames(flir_group2) <- flir_group2[1, ]
+flir_group2 <- flir_group2[-1, ]
+
+# Replace empty strings or spaces with NA
+flir_group2[flir_group2 == "" | flir_group2 == " "] <- NA
+
+# Remove columns where all values are NA
+flir_group2_clean <- flir_group2[, colSums(is.na(flir_group2)) != nrow(flir_group2)]
+```
+
+
+
+
+
+# ICI (Infrared Cameras Inc.) Groups:
+
+- ICI Group 1: Ambient Temp 20-24°C
+
+- ICI Group 2: Ambient Temp 24-29°C
+
+### Load and clean ICI Group 1
+```{r}
+ici_group1 <- read.csv("ICI_group1.csv", header = FALSE, skip = 2)
+colnames(ici_group1) <- ici_group1[1, ]
+ici_group1 <- ici_group1[-1, ]
+```
+
+
+### Replace empty strings or spaces with NA
+```{r}
+ici_group1[ici_group1 == "" | ici_group1 == " "] <- NA
+```
+
+
+### Remove columns where all values are NA
+```{r}
+ici_group1_clean <- ici_group1[, colSums(is.na(ici_group1)) != nrow(ici_group1)]
+```
+
+
+### Load and clean ICI Group 2
+```{r}
+ici_group2 <- read.csv("ICI_group2.csv", header = FALSE, skip = 2)
+colnames(ici_group2) <- ici_group2[1, ]
+ici_group2 <- ici_group2[-1, ]
+```
+
+
+### Replace empty strings or spaces with NA
+```{r}
+ici_group2[ici_group2 == "" | ici_group2 == " "] <- NA
+```
+
+
+### Remove columns where all values are NA
+```{r}
+ici_group2_clean <- ici_group2[, colSums(is.na(ici_group2)) != nrow(ici_group2)]
+```
+
+
+
+
+# Check the structure and column names of the cleaned datasets
+```{r}
+str(flir_group1_clean)
+str(flir_group2_clean)
+str(ici_group1_clean)
+str(ici_group2_clean)
+```
+
+```{r}
+names(flir_group1_clean)
+names(flir_group2_clean)
+names(ici_group1_clean)
+names(ici_group2_clean)
+```
+
+# Check for duplicate SubjectIDs and overlaps
+Ensure all SubjectIDs are unique within each dataset
+```{r}
+length(unique(flir_group1_clean$SubjectID)) == nrow(flir_group1_clean)
+length(unique(flir_group2_clean$SubjectID)) == nrow(flir_group2_clean)
+length(unique(ici_group1_clean$SubjectID)) == nrow(ici_group1_clean)
+length(unique(ici_group2_clean$SubjectID)) == nrow(ici_group2_clean)
+```
+
+
+# Find duplicated SubjectIDs
+```{r}
+duplicated_flir_group1 <- flir_group1_clean$SubjectID[duplicated(flir_group1_clean$SubjectID)]
+duplicated_flir_group2 <- flir_group2_clean$SubjectID[duplicated(flir_group2_clean$SubjectID)]
+duplicated_ici_group1 <- ici_group1_clean$SubjectID[duplicated(ici_group1_clean$SubjectID)]
+duplicated_ici_group2 <- ici_group2_clean$SubjectID[duplicated(ici_group2_clean$SubjectID)]
+```
+
+# Check for overlapping SubjectIDs between datasets
+```{r}
+overlap_flir1_flir2 <- intersect(flir_group1_clean$SubjectID, flir_group2_clean$SubjectID)
+overlap_flir1_ici1 <- intersect(flir_group1_clean$SubjectID, ici_group1_clean$SubjectID)
+overlap_flir1_ici2 <- intersect(flir_group1_clean$SubjectID, ici_group2_clean$SubjectID)
+overlap_flir2_ici1 <- intersect(flir_group2_clean$SubjectID, ici_group1_clean$SubjectID)
+overlap_flir2_ici2 <- intersect(flir_group2_clean$SubjectID, ici_group2_clean$SubjectID)
+overlap_ici1_ici2 <- intersect(ici_group1_clean$SubjectID, ici_group2_clean$SubjectID)
+```
+
+# Print overlaps
+```{r}
+overlap_flir1_flir2
+overlap_flir1_ici1
+overlap_flir1_ici2
+overlap_flir2_ici1
+overlap_flir2_ici2
+overlap_ici1_ici2
+```
+
+
+
+
+
+# Clean column names and convert variables
+
+### Fix incorrect variable name "T_LC14" to "T_LC4" in all datasets
+```{r}
+fix_column_name <- function(data) {
+  if ("T_LC14" %in% colnames(data)) {
+    colnames(data)[colnames(data) == "T_LC14"] <- "T_LC4"
+  }
+  return(data)
+}
+```
+
+
+### Apply the function to all datasets
+```{r}
+flir_group1_clean <- fix_column_name(flir_group1_clean)
+flir_group2_clean <- fix_column_name(flir_group2_clean)
+ici_group1_clean <- fix_column_name(ici_group1_clean)
+ici_group2_clean <- fix_column_name(ici_group2_clean)
+```
+
+
+# Vector of base variable names excluding the round numbers
+```{r}
+base_temp_vars <- c("T_offset", "Max1R13_", "Max1L13_", "aveAllR13_", "aveAllL13_", 
+                    "T_RC", "T_RC_Dry", "T_RC_Wet", "T_RC_Max", 
+                    "T_LC", "T_LC_Dry", "T_LC_Wet", "T_LC_Max", 
+                    "RCC", "LCC", "canthiMax", "canthi4Max", 
+                    "T_FHCC", "T_FHRC", "T_FHLC", "T_FHBC", "T_FHTC", 
+                    "T_FH_Max", "T_FHC_Max", "T_Max", "T_OR", "T_OR_Max")
+```
+
+
+# Function to convert variables to numeric for all 4 rounds
+```{r}
+convert_to_numeric <- function(data, base_vars, rounds = 4) {
+  for (round in 1:rounds) {
+    for (var in base_vars) {
+      var_name <- paste0(var, round)
+      if (var_name %in% colnames(data)) {
+        data[[var_name]] <- as.numeric(data[[var_name]])
+      } else {
+        cat(var_name, "not found in the dataset\n")
+      }
+    }
+  }
+  return(data)
+}
+```
+
+
+# Apply the function to all datasets
+```{r}
+flir_group1_clean <- convert_to_numeric(flir_group1_clean, base_temp_vars)
+flir_group2_clean <- convert_to_numeric(flir_group2_clean, base_temp_vars)
+ici_group1_clean <- convert_to_numeric(ici_group1_clean, base_temp_vars)
+ici_group2_clean <- convert_to_numeric(ici_group2_clean, base_temp_vars)
+```
+
+
+# Confirm the conversion
+```{r}
+str(flir_group1_clean)
+str(flir_group2_clean)
+str(ici_group1_clean)
+str(ici_group2_clean)
+```
+
+
+
+# Convert other specific columns to numeric or factors
+
+```{r}
+# Convert aveOralF and aveOralM to numeric
+convert_oral_vars <- function(data) {
+  data$aveOralF <- as.numeric(data$aveOralF)
+  data$aveOralM <- as.numeric(data$aveOralM)
+  return(data)
+}
+
+flir_group1_clean <- convert_oral_vars(flir_group1_clean)
+flir_group2_clean <- convert_oral_vars(flir_group2_clean)
+ici_group1_clean <- convert_oral_vars(ici_group1_clean)
+ici_group2_clean <- convert_oral_vars(ici_group2_clean)
+```
+
+
+# Convert Gender, Age, Ethnicity and Cosmetics to factors
+```{r}
+convert_factors <- function(data) {
+  data$Gender <- as.factor(data$Gender)
+  data$Age <- as.factor(data$Age)
+  data$Ethnicity <- as.factor(data$Ethnicity)
+  data$Cosmetics <- as.factor(data$Cosmetics)
+  return(data)
+}
+
+flir_group1_clean <- convert_factors(flir_group1_clean)
+flir_group2_clean <- convert_factors(flir_group2_clean)
+ici_group1_clean <- convert_factors(ici_group1_clean)
+ici_group2_clean <- convert_factors(ici_group2_clean)
+```
+
+
+# Convert T_atm, Humidity, and Distance to numeric
+```{r}
+convert_environment_vars <- function(data) {
+  data$T_atm <- as.numeric(data$T_atm)
+  data$Humidity <- as.numeric(data$Humidity)
+  data$Distance <- as.numeric(data$Distance)
+  return(data)
+}
+
+flir_group1_clean <- convert_environment_vars(flir_group1_clean)
+flir_group2_clean <- convert_environment_vars(flir_group2_clean)
+ici_group1_clean <- convert_environment_vars(ici_group1_clean)
+ici_group2_clean <- convert_environment_vars(ici_group2_clean)
+```
+
+
+
+
+# Convert Date and Time columns
+```{r}
+# Use lubridate to convert Date and Time
+library(lubridate)
+
+convert_date_time <- function(data) {
+  data$Time <- lubridate::hms(data$Time)   # Convert Time to HH:MM:SS format
+  data$Date <- lubridate::ymd(data$Date)   # Convert Date to YYYY-MM-DD format
+  return(data)
+}
+```
+
+
+# Apply the function to all datasets
+```{r}
+flir_group1_clean <- convert_date_time(flir_group1_clean)
+flir_group2_clean <- convert_date_time(flir_group2_clean)
+ici_group1_clean <- convert_date_time(ici_group1_clean)
+ici_group2_clean <- convert_date_time(ici_group2_clean)
+```
+
+
+# Check the summaries to confirm correct formatting
+```{r}
+summary(flir_group1_clean$Time)
+summary(flir_group1_clean$Date)
+
+summary(flir_group2_clean$Time)
+summary(flir_group2_clean$Date)
+
+summary(ici_group1_clean$Time)
+summary(ici_group1_clean$Date)
+
+summary(ici_group2_clean$Time)
+summary(ici_group2_clean$Date)
+```
+
+
+
+
+# Handling the NA values #
+```{r}
+library(naniar)
+```
+
+
+# Visualize missing data for each dataset
+```{r}
+vis_miss(flir_group1_clean)
+vis_miss(flir_group2_clean)
+vis_miss(ici_group1_clean)
+vis_miss(ici_group2_clean)
+```
+
+
+
+
+# Function to check unique levels for categorical variables ####
+```{r}
+
+check_categorical_levels <- function(data) {
+  for (column in colnames(data)) {
+    
+    # If the column is a factor, print its unique levels and number of NA values
+    
+    if (is.factor(data[[column]])) {
+      cat("\nUnique values in", column, ":\n")
+      print(unique(data[[column]]))
+      cat("Number of NAs in", column, ":\n")
+      print(sum(is.na(data[[column]])))
+    }
+  }
+  return(data)
+}
+```
+
+
+# Apply to all datasets
+
+```{r}
+# For FLIR Group 1
+cat("FLIR Group 1:\n")
+flir_group1_clean <- check_categorical_levels(flir_group1_clean)
+
+# For FLIR Group 2
+cat("\nFLIR Group 2:\n")
+flir_group2_clean <- check_categorical_levels(flir_group2_clean)
+
+# For ICI Group 1
+cat("\nICI Group 1:\n")
+ici_group1_clean <- check_categorical_levels(ici_group1_clean)
+
+# For ICI Group 2
+cat("\nICI Group 2:\n")
+ici_group2_clean <- check_categorical_levels(ici_group2_clean)
+```
+
+# Removing rows with missing values 
+
+```{r}
+# complete.cases to remove rows that contain any missing values from each dataset
+flir_group1_clean <- flir_group1_clean[complete.cases(flir_group1_clean), ]
+flir_group2_clean <- flir_group2_clean[complete.cases(flir_group2_clean), ]
+ici_group1_clean <- ici_group1_clean[complete.cases(ici_group1_clean), ]
+ici_group2_clean <- ici_group2_clean[complete.cases(ici_group2_clean), ]
+```
+
+
+# Count the number of remaining NA values
+```{r}
+cat("\nRemaining NA counts:\n")
+cat("FLIR Group 1: ", sum(is.na(flir_group1_clean)), "\n")
+cat("FLIR Group 2: ", sum(is.na(flir_group2_clean)), "\n")
+cat("ICI Group 1: ", sum(is.na(ici_group1_clean)), "\n")
+cat("ICI Group 2: ", sum(is.na(ici_group2_clean)), "\n")
+```
+
+
+# Final structure check
+
+## Check the structure of the cleaned datasets after removing rows with missing values
+```{r}
+cat("\nFinal structure of datasets:\n")
+str(flir_group1_clean) # Expected: 509 rows, ~7% NAs before removal
+str(flir_group2_clean) # Expected: 450 rows, ~5.5% NAs before removal
+str(ici_group1_clean)  # Expected: 364 rows, ~32% NAs before removal
+str(ici_group2_clean)  # Expected: 305 rows, ~35% NAs before removal
+```
+
+# Save cleaned datasets to CSV files
+
+```{r}
+# For flir_group1_clean
+write.csv(flir_group1_clean, file = "/Users/karibautista/Desktop/flir_group1_clean.csv", row.names = FALSE)
+
+# For flir_group2_clean
+write.csv(flir_group2_clean, file = "/Users/karibautista/Desktop/flir_group2_clean.csv", row.names = FALSE)
+
+# For ici_group1_clean
+write.csv(ici_group1_clean, file = "/Users/karibautista/Desktop/ici_group1_clean.csv", row.names = FALSE)
+
+# For ici_group2_clean
+write.csv(ici_group2_clean, file = "/Users/karibautista/Desktop/ici_group2_clean.csv", row.names = FALSE)
+
+cat("\nDatasets have been saved as CSV files on the Desktop.\n")
+```
+
+#-----------------------------------------------------------------------------------------------------------
+
+# Create a new column with the average of the four rounds
+## FLIR GROUP1 AND GROUP2
+```{r}
+df <- read.csv("flir_group1_clean.csv")
+df2 <- read.csv("flir_group2_clean.csv")
+```
+
+GROUP 1
+Calculate the average of the T_offset variables across the four rounds
+```{r}
+df$T_offset_avg <- rowMeans(df[, c("T_offset1", "T_offset2", "T_offset3", "T_offset4")], na.rm = TRUE)
+df$Max1R_avg <- rowMeans(df[, c("Max1R13_1", "Max1R13_2", "Max1R13_3", "Max1R13_4")], na.rm = TRUE)
+df$Max1L_avg <- rowMeans(df[, c("Max1L13_1", "Max1L13_2", "Max1L13_3", "Max1L13_4")], na.rm = TRUE)
+df$aveAllR_avg <- rowMeans(df[, c("aveAllR13_1", "aveAllR13_2", "aveAllR13_3", "aveAllR13_4")], na.rm = TRUE)
+df$aveAllL_avg <- rowMeans(df[, c("aveAllL13_1", "aveAllL13_2", "aveAllL13_3", "aveAllL13_4")], na.rm = TRUE)
+df$T_RC_avg <- rowMeans(df[, c("T_RC1", "T_RC2", "T_RC3", "T_RC4")], na.rm = TRUE)
+df$T_RC_Dry_avg <- rowMeans(df[, c("T_RC_Dry1", "T_RC_Dry2", "T_RC_Dry3", "T_RC_Dry4")], na.rm = TRUE)
+df$T_RC_Wet_avg <- rowMeans(df[, c("T_RC_Wet1", "T_RC_Wet2", "T_RC_Wet3", "T_RC_Wet4")], na.rm = TRUE)
+df$T_RC_Max_avg <- rowMeans(df[, c("T_RC_Max1", "T_RC_Max2", "T_RC_Max3", "T_RC_Max4")], na.rm = TRUE)
+df$T_LC_avg <- rowMeans(df[, c("T_LC1", "T_LC2", "T_LC3", "T_LC4")], na.rm = TRUE)
+df$T_LC_Dry_avg <- rowMeans(df[, c("T_LC_Dry1", "T_LC_Dry2", "T_LC_Dry3", "T_LC_Dry4")], na.rm = TRUE)
+df$T_LC_Wet_avg <- rowMeans(df[, c("T_LC_Wet1", "T_LC_Wet2", "T_LC_Wet3", "T_LC_Wet4")], na.rm = TRUE)
+df$T_LC_Max_avg <- rowMeans(df[, c("T_LC_Max1", "T_LC_Max2", "T_LC_Max3", "T_LC_Max4")], na.rm = TRUE)
+df$RCC_avg <- rowMeans(df[, c("RCC1", "RCC2", "RCC3", "RCC4")], na.rm = TRUE)
+df$LCC_avg <- rowMeans(df[, c("LCC1", "LCC2", "LCC3", "LCC4")], na.rm = TRUE)
+df$canthiMax_avg <- rowMeans(df[, c("canthiMax1", "canthiMax2", "canthiMax3", "canthiMax4")], na.rm = TRUE)
+df$canthi4Max_avg <- rowMeans(df[, c("canthi4Max1", "canthi4Max2", "canthi4Max3", "canthi4Max4")], na.rm = TRUE)
+df$T_FHCC_avg <- rowMeans(df[, c("T_FHCC1", "T_FHCC2", "T_FHCC3", "T_FHCC4")], na.rm = TRUE)
+df$T_FHRC_avg <- rowMeans(df[, c("T_FHRC1", "T_FHRC2", "T_FHRC3", "T_FHRC4")], na.rm = TRUE)
+df$T_FHLC_avg <- rowMeans(df[, c("T_FHLC1", "T_FHLC2", "T_FHLC3", "T_FHLC4")], na.rm = TRUE)
+df$T_FHBC_avg <- rowMeans(df[, c("T_FHBC1", "T_FHBC2", "T_FHBC3", "T_FHBC4")], na.rm = TRUE)
+df$T_FHTC_avg <- rowMeans(df[, c("T_FHTC1", "T_FHTC2", "T_FHTC3", "T_FHTC4")], na.rm = TRUE)
+df$T_FH_Max_avg <- rowMeans(df[, c("T_FH_Max1", "T_FH_Max2", "T_FH_Max3", "T_FH_Max4")], na.rm = TRUE)
+df$T_FHC_Max_avg <- rowMeans(df[, c("T_FHC_Max1", "T_FHC_Max2", "T_FHC_Max3", "T_FHC_Max4")], na.rm = TRUE)
+df$T_Max_avg <- rowMeans(df[, c("T_Max1", "T_Max2", "T_Max3", "T_Max4")], na.rm = TRUE)
+df$T_OR_avg <- rowMeans(df[, c("T_OR1", "T_OR2", "T_OR3", "T_OR4")], na.rm = TRUE)
+df$T_OR_Max_avg <- rowMeans(df[, c("T_OR_Max1", "T_OR_Max2", "T_OR_Max3", "T_OR_Max4")], na.rm = TRUE)
+```
+
+GROUP 2
+```{r}
+df2$T_offset_avg <- rowMeans(df2[, c("T_offset1", "T_offset2", "T_offset3", "T_offset4")], na.rm = TRUE)
+df2$Max1R_avg <- rowMeans(df2[, c("Max1R13_1", "Max1R13_2", "Max1R13_3", "Max1R13_4")], na.rm = TRUE)
+df2$Max1L_avg <- rowMeans(df2[, c("Max1L13_1", "Max1L13_2", "Max1L13_3", "Max1L13_4")], na.rm = TRUE)
+df2$aveAllR_avg <- rowMeans(df2[, c("aveAllR13_1", "aveAllR13_2", "aveAllR13_3", "aveAllR13_4")], na.rm = TRUE)
+df2$aveAllL_avg <- rowMeans(df2[, c("aveAllL13_1", "aveAllL13_2", "aveAllL13_3", "aveAllL13_4")], na.rm = TRUE)
+df2$T_RC_avg <- rowMeans(df2[, c("T_RC1", "T_RC2", "T_RC3", "T_RC4")], na.rm = TRUE)
+df2$T_RC_Dry_avg <- rowMeans(df2[, c("T_RC_Dry1", "T_RC_Dry2", "T_RC_Dry3", "T_RC_Dry4")], na.rm = TRUE)
+df2$T_RC_Wet_avg <- rowMeans(df2[, c("T_RC_Wet1", "T_RC_Wet2", "T_RC_Wet3", "T_RC_Wet4")], na.rm = TRUE)
+df2$T_RC_Max_avg <- rowMeans(df2[, c("T_RC_Max1", "T_RC_Max2", "T_RC_Max3", "T_RC_Max4")], na.rm = TRUE)
+df2$T_LC_avg <- rowMeans(df2[, c("T_LC1", "T_LC2", "T_LC3", "T_LC4")], na.rm = TRUE)
+df2$T_LC_Dry_avg <- rowMeans(df2[, c("T_LC_Dry1", "T_LC_Dry2", "T_LC_Dry3", "T_LC_Dry4")], na.rm = TRUE)
+df2$T_LC_Wet_avg <- rowMeans(df2[, c("T_LC_Wet1", "T_LC_Wet2", "T_LC_Wet3", "T_LC_Wet4")], na.rm = TRUE)
+df2$T_LC_Max_avg <- rowMeans(df2[, c("T_LC_Max1", "T_LC_Max2", "T_LC_Max3", "T_LC_Max4")], na.rm = TRUE)
+df2$RCC_avg <- rowMeans(df2[, c("RCC1", "RCC2", "RCC3", "RCC4")], na.rm = TRUE)
+df2$LCC_avg <- rowMeans(df2[, c("LCC1", "LCC2", "LCC3", "LCC4")], na.rm = TRUE)
+df2$canthiMax_avg <- rowMeans(df2[, c("canthiMax1", "canthiMax2", "canthiMax3", "canthiMax4")], na.rm = TRUE)
+df2$canthi4Max_avg <- rowMeans(df2[, c("canthi4Max1", "canthi4Max2", "canthi4Max3", "canthi4Max4")], na.rm = TRUE)
+df2$T_FHCC_avg <- rowMeans(df2[, c("T_FHCC1", "T_FHCC2", "T_FHCC3", "T_FHCC4")], na.rm = TRUE)
+df2$T_FHRC_avg <- rowMeans(df2[, c("T_FHRC1", "T_FHRC2", "T_FHRC3", "T_FHRC4")], na.rm = TRUE)
+df2$T_FHLC_avg <- rowMeans(df2[, c("T_FHLC1", "T_FHLC2", "T_FHLC3", "T_FHLC4")], na.rm = TRUE)
+df2$T_FHBC_avg <- rowMeans(df2[, c("T_FHBC1", "T_FHBC2", "T_FHBC3", "T_FHBC4")], na.rm = TRUE)
+df2$T_FHTC_avg <- rowMeans(df2[, c("T_FHTC1", "T_FHTC2", "T_FHTC3", "T_FHTC4")], na.rm = TRUE)
+df2$T_FH_Max_avg <- rowMeans(df2[, c("T_FH_Max1", "T_FH_Max2", "T_FH_Max3", "T_FH_Max4")], na.rm = TRUE)
+df2$T_FHC_Max_avg <- rowMeans(df2[, c("T_FHC_Max1", "T_FHC_Max2", "T_FHC_Max3", "T_FHC_Max4")], na.rm = TRUE)
+df2$T_Max_avg <- rowMeans(df2[, c("T_Max1", "T_Max2", "T_Max3", "T_Max4")], na.rm = TRUE)
+df2$T_OR_avg <- rowMeans(df2[, c("T_OR1", "T_OR2", "T_OR3", "T_OR4")], na.rm = TRUE)
+df2$T_OR_Max_avg <- rowMeans(df2[, c("T_OR_Max1", "T_OR_Max2", "T_OR_Max3", "T_OR_Max4")], na.rm = TRUE)
+```
+
+
+Average clean
+
+```{r}
+# For flir_group1_clean
+write.csv(df, file = "/Users/karibautista/Desktop/df.csv", row.names = FALSE)
+cat("\nDatasets have been saved as CSV files on the Desktop.\n")
+```
+
+```{r}
+write.csv(df2, file = "/Users/karibautista/Desktop/df2.csv", row.names = FALSE)
+```
+
+
+
+# Combine df and df2 into a single dataframe
+```{r}
+combined_df <- rbind(df, df2)
+```
+
+# Save the combined dataframe to a CSV file
+```{r}
+write.csv(combined_df, "/Users/karibautista/Desktop/combined_data.csv", row.names = FALSE)
+```
+
+
+
+
+#----------------------------------------------------------------------------------------------------
+
+
+
+# LONG TABLE TRANSFORMATION
+
+## Transform datasets into long format
+```{r}
+library(tidyr)
+transform_to_long <- function(data, base_vars, subject_vars) {
+  
+  long_data <- pivot_longer(
+    data, 
+    cols = starts_with(base_vars),      # Columns to gather (all temperature variables)
+    names_to = c(".value", "Round"),    # ".value" means the base variable name stays as is, "Round" becomes the round number
+    names_pattern = "(.*)([1-4])"       # Extract the base variable and round number
+  )
+  
+  long_data$Round <- factor(long_data$Round, levels = c("1", "2", "3", "4"))
+  
+  return(long_data)
+}
+```
+
+
+# Base temperature variables
+```{r}
+base_temp_vars <- c("T_offset", "Max1R13_", "Max1L13_", "aveAllR13_", "aveAllL13_", 
+                    "T_RC", "T_RC_Dry", "T_RC_Wet", "T_RC_Max", 
+                    "T_LC", "T_LC_Dry", "T_LC_Wet", "T_LC_Max", 
+                    "RCC", "LCC", "canthiMax", "canthi4Max", 
+                    "T_FHCC", "T_FHRC", "T_FHLC", "T_FHBC", "T_FHTC", 
+                    "T_FH_Max", "T_FHC_Max", "T_Max", "T_OR", "T_OR_Max")
+
+subject_vars <- c("SubjectID", "Gender", "Age", "Ethnicity", "Cosmetics", "T_atm", "Humidity", "Distance", "Date", "Time")
+```
+
+
+# Apply the function
+```{r}
+flir_group1_long <- transform_to_long(flir_group1_clean, base_temp_vars, subject_vars)
+flir_group2_long <- transform_to_long(flir_group2_clean, base_temp_vars, subject_vars)
+ici_group1_long  <- transform_to_long(ici_group1_clean, base_temp_vars, subject_vars)
+ici_group2_long  <- transform_to_long(ici_group2_clean, base_temp_vars, subject_vars)
+
+head(flir_group1_long)
+head(flir_group2_long)
+head(ici_group1_long)
+head(ici_group2_long)
+
+summary(flir_group1_long)
+summary(flir_group2_long)
+summary(ici_group1_long)
+summary(ici_group2_long)
+
+dim(flir_group1_long)
+dim(flir_group2_long)
+dim(ici_group1_long)
+dim(ici_group2_long)
+
+colnames(flir_group1_long)
+colnames(flir_group2_long)
+colnames(ici_group1_long)
+colnames(ici_group2_long)
+
+sum(is.na(flir_group1_long))
+sum(is.na(flir_group2_long))
+sum(is.na(ici_group1_long))
+sum(is.na(ici_group2_long))
+```
+
+# Save cleaned datasets to CSV files
+
+```{r}
+# For flir_group1_clean
+write.csv(flir_group1_long, file = "/Users/karibautista/Desktop/flir_group1_clean.csv", row.names = FALSE)
+
+# For flir_group2_clean
+write.csv(flir_group2_long, file = "/Users/karibautista/Desktop/flir_group2_clean.csv", row.names = FALSE)
+
+# For ici_group1_clean
+write.csv(ici_group1_long, file = "/Users/karibautista/Desktop/ici_group1_clean.csv", row.names = FALSE)
+
+# For ici_group2_clean
+write.csv(ici_group2_long, file = "/Users/karibautista/Desktop/ici_group2_clean.csv", row.names = FALSE)
+
+
+cat("\nDatasets have been saved as CSV files on the Desktop.\n")
+```
+
+
+
+
+
+
+# Plot
+#---------------#
+# FLIR Group 1: 
+#---------------#
+
+# Set up a grid of plots
+# y = 
+#par(mfrow = c(2, 2))  # 1 row, 3 columns; adjust as necessary
+
+# Example scatter plots
+#plot(flir_group2_clean$Max1R13_1, flir_group2_clean$aveOralM, main = "Scatter Plot of Y vs. X1", xlab = "X1", ylab = "Y")
+#plot(flir_group2_clean$Max1L13_1, flir_group2_clean$aveOralM, main = "Scatter Plot of Y vs. X2", xlab = "X2", ylab = "Y")
+#plot(flir_group2_clean$aveAllR13_1, flir_group2_clean$aveOralM, main = "Scatter Plot of Y vs. X3", xlab = "X3", ylab = "Y")
+
+# Reset the layout
+#par(mfrow = c(1, 1))
+
+
+
+
+
+
