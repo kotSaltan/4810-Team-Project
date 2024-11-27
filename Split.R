@@ -66,4 +66,49 @@ avg_temp_vars <- c("Max1R_avg", "aveAllR_avg", # right eye
                    "T_OR_avg", # oral
                    "T_OR_Max_avg")
 
-pairs(train_data[, avg_temp_vars])
+
+
+right_eye_var <- c("Max1R_avg", 
+                   "aveAllR_avg", # winner
+                   "T_RC_avg",
+                   "T_RC_Dry_avg",
+                   "T_RC_Wet_avg",
+                   "T_RC_Max_avg", 
+                   "RCC_avg") # winner
+                 
+                   
+left_eye_var <- c( "Max1L_avg", 
+                   "aveAllL_avg", # winner
+                   "T_LC_avg",
+                   "T_LC_Dry_avg",
+                   "T_LC_Wet_avg", # winner
+                   "T_LC_Max_avg",
+                   "LCC_avg")
+                   
+                   
+extended_eye_var <- c("canthiMax_avg", # winner
+                   "canthi4Max_avg")
+                   
+                   
+forehead_sides <- c( "T_FHRC_avg", # right and left forehead # winner
+                   "T_FHLC_avg") # winner
+                   
+                   
+forehead_var <- c("T_FHCC_avg", 
+                   "T_FHBC_avg", # winner
+                   "T_FHTC_avg", # winner
+                   "T_FH_Max_avg", # winner
+                   "T_FHC_Max_avg")
+                   
+                   "T_Max_avg" # full face # winner
+                   
+oral_var <- c("T_OR_avg",
+              "T_OR_Max_avg")# winner
+
+pairs(train_data[, left_eye_var], main = "left eye")
+pairs(train_data[, right_eye_var], main = "right eye")
+pairs(train_data[, forehead_var], main = "forehead")
+pairs(train_data[, oral_var], main = "oral")
+pairs(train_data[, extended_eye_var], main = "extended eye")
+pairs(train_data[, forehead_sides], main = "forehead_sides")
+
