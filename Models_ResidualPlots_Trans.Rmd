@@ -1,0 +1,364 @@
+---
+title: "Stepwise Regression DANA4820 Project"
+author: "Carlos"
+date: "2024-11-27"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Define the file path
+
+train_data <- read.csv("train_data.csv")
+View(train_data)
+```
+
+## Rename the variables
+```{r}
+# Rename variables in the dataset
+colnames(train_data) <- sub("T_OR_Max_avg", "Max_t_mouth", colnames(train_data))
+colnames(train_data) <- sub("T_FHC_Max_avg", "Max_t_ext_fh", colnames(train_data))
+colnames(train_data) <- sub("T_FHBC_avg", "Ave_t_bot_fh", colnames(train_data))
+colnames(train_data) <- sub("T_FHTC_avg", "Ave_t_top_fh", colnames(train_data))
+colnames(train_data) <- sub("RCC_avg", "Ave_t_r_inner_canthus", colnames(train_data))
+colnames(train_data) <- sub("aveAllR_avg", "Ave_t_r_canthus", colnames(train_data))
+colnames(train_data) <- sub("aveAllL_avg", "Ave_t_l_canthus", colnames(train_data))
+colnames(train_data) <- sub("T_LC_Wet_avg", "Ave_t_l_canthus_w", colnames(train_data))
+colnames(train_data) <- sub("canthi4Max_avg", "Max_t_ext_canthus", colnames(train_data))
+colnames(train_data) <- sub("T_FHRC_avg", "Ave_r_left_fh", colnames(train_data))
+colnames(train_data) <- sub("T_FHLC_avg", "Ave_t_left_fh", colnames(train_data))
+colnames(train_data) <- sub("T_Max_avg", "Max_t_face", colnames(train_data))
+colnames(train_data) <- sub("Gender", "gender", colnames(train_data))
+colnames(train_data) <- sub("Age", "age", colnames(train_data))
+colnames(train_data) <- sub("Ethnicity", "ethnic", colnames(train_data))
+colnames(train_data) <- sub("Cosmetics", "cosm", colnames(train_data))
+colnames(train_data) <- sub("T_atm", "Ambient_t", colnames(train_data))
+colnames(train_data) <- sub("Humidity", "humidity", colnames(train_data))
+```
+
+
+# 1. Models types
+```{r}
+# Fit the null model (with no predictors)
+null_model <- lm(aveOralM ~ 1, data = train_data)
+
+# Fit the full model (with all explanatory variables)
+full_model <- lm(
+  aveOralM ~ Max_t_mouth + Max_t_ext_fh + Ave_t_bot_fh + Ave_t_top_fh +
+    Ave_t_r_inner_canthus + Ave_t_r_canthus + Ave_t_l_canthus + Ave_t_l_canthus_w +
+    Max_t_ext_canthus + Ave_r_left_fh + Ave_t_left_fh + Max_t_face +
+    gender + age + ethnic + cosm + Ambient_t + humidity,
+  data = train_data
+)
+
+# Forward stepwise regression
+forward_model <- step(
+  null_model,
+  scope = list(lower = ~1, upper = formula(full_model)),
+  direction = "forward",
+  trace = FALSE
+)
+
+# Backward stepwise regression
+backward_model <- step(
+  full_model,
+  direction = "backward",
+  trace = FALSE
+)
+
+# Stepwise regression in both directions
+both_model <- step(
+  null_model,
+  scope = list(lower = ~1, upper = formula(full_model)),
+  direction = "both",
+  trace = FALSE
+)
+
+# Print model summaries with interpretations
+cat("\n### Summary of Forward Model ###\n")
+summary(forward_model)
+cat("2. Final Model:\n")
+cat(deparse(formula(forward_model)), "\n")
+
+cat("\n### Summary of Backward Model ###\n")
+summary(backward_model)
+cat("2. Final Model:\n")
+cat(deparse(formula(backward_model)), "\n")
+
+cat("\n### Summary of Both Directions Model ###\n")
+summary(both_model)
+cat("2. Final Model:\n")
+cat(deparse(formula(both_model)), "\n")
+
+cat("\n### Summary of Full Model ###\n")
+summary(full_model)
+cat("2. Final Model:\n")
+cat(deparse(formula(full_model)), "\n")
+
+# Print AIC values for comparison
+aic_forward <- AIC(forward_model)
+aic_backward <- AIC(backward_model)
+aic_both <- AIC(both_model)
+aic_full <- AIC(full_model)
+
+cat("\n### AIC Values for Model Comparison ###\n")
+cat("Forward Model AIC:", aic_forward, "\n")
+cat("Backward Model AIC:", aic_backward, "\n")
+cat("Both Directions Model AIC:", aic_both, "\n")
+cat("Full Model AIC:", aic_full, "\n")
+```
+# 2. Multicollinearity
+```{r}
+library(car)
+vif(full_model)
+vif(forward_model)
+vif(backward_model)
+vif(both_model)
+```
+
+
+# 3. Anova with the 4 models
+```{r}
+anova(full_model,forward_model)
+anova(full_model,backward_model)
+anova(full_model,both_model)
+
+```
+*
+
+
+# 4. Residual Plots
+
+#### - Full Model
+```{r}
+#Get residuals and predicted values
+residuals1 <- resid(full_model)  # Get residuals
+predicted_values1 <- predict(full_model)  # Get predicted values
+
+# Calculate the standard deviation of the residuals
+std_dev1 <- sd(residuals1)
+
+# Step 1: Identify outliers that lie above 2 standard deviations or below -2 standard deviations
+outliers1 <- residuals1 > (2 * std_dev1) | residuals1 < (-2 * std_dev1)
+
+# Step 2: Count the number of outliers
+num_outliers1 <- sum(outliers1)
+
+# Step 3: Calculate the percentage of outliers
+percentage_outliers1 <- (num_outliers1 / length(residuals1)) * 100
+
+# Step 4: Output the percentage of outliers
+cat("Percentage of residuals that are outliers (beyond ±2 SD):", percentage_outliers1, "%\n")
+
+# Step 5: Check if the percentage of outliers is greater than 5%
+if (percentage_outliers1 > 5) {
+  cat("More than 5% of the residuals are outliers.\n")
+} else {
+  cat("Less than or equal to 5% of the residuals are outliers.\n")}
+
+# Step 6: Create the residual plot
+plot(predicted_values1, residuals1, 
+     ylab = "Residuals", 
+     xlab = "Fitted Values (Oral M Temp)", 
+     main = "Residual Full Model Plot")
+
+# Add a horizontal line at 0
+abline(h = 0, col = "red", lty = 2)
+
+# Add lines for ±2 standard deviations
+abline(h = 2 * std_dev1, col = "red", lty = 2)   # Upper line
+abline(h = -2 * std_dev1, col = "red", lty = 2)   # Lower line
+
+```
+95% of the dots are within the two standard deviations
+
+#### - Forward (winner)
+```{r}
+#Get residuals and predicted values
+residuals2 <- resid(forward_model)  # Get residuals
+predicted_values2 <- predict(forward_model)  # Get predicted values
+
+std_dev2 <- sd(residuals2)
+outliers2 <- residuals2 > (2 * std_dev2) | residuals2 < (-2 * std_dev2)
+num_outliers2 <- sum(outliers2)
+percentage_outliers2 <- (num_outliers2 / length(residuals2)) * 100
+
+cat("Percentage of residuals that are outliers (beyond ±2 SD):", percentage_outliers2, "%\n")
+
+if (percentage_outliers2 > 5) {
+  cat("More than 5% of the residuals are outliers.\n")
+} else {
+  cat("Less than or equal to 5% of the residuals are outliers.\n")}
+
+# Step 6: Create the residual plot
+plot(predicted_values2, residuals2, 
+     ylab = "Residuals", 
+     xlab = "Fitted Values (Oral M Temp)", 
+     main = "Residual Forward Plot")
+
+# Add a horizontal line at 0
+abline(h = 0, col = "red", lty = 2)
+
+# Add lines for ±2 standard deviations
+abline(h = 2 * std_dev2, col = "red", lty = 2)   # Upper line
+abline(h = -2 * std_dev2, col = "red", lty = 2)   # Lower line
+
+```
+```{r}
+plot(forward_model)
+```
+
+
+#### - Backward Model
+```{r}
+#Get residuals and predicted values
+residuals3 <- resid(backward_model)  # Get residuals
+predicted_values3 <- predict(backward_model)  # Get predicted values
+
+std_dev3 <- sd(residuals3)
+outliers3 <- residuals3 > (2 * std_dev3) | residuals3 < (-2 * std_dev3)
+num_outliers3 <- sum(outliers3)
+percentage_outliers3 <- (num_outliers3 / length(residuals3)) * 100
+
+cat("Percentage of residuals that are outliers (beyond ±2 SD):", percentage_outliers3, "%\n")
+
+if (percentage_outliers3 > 5) {
+  cat("More than 5% of the residuals are outliers.\n")
+} else {
+  cat("Less than or equal to 5% of the residuals are outliers.\n")}
+
+# Step 6: Create the residual plot
+plot(predicted_values3, residuals3, 
+     ylab = "Residuals", 
+     xlab = "Fitted Values (Oral M Temp)", 
+     main = "Residual Backward Plot")
+
+# Add a horizontal line at 0
+abline(h = 0, col = "red", lty = 2)
+
+# Add lines for ±2 standard deviations
+abline(h = 2 * std_dev3, col = "red", lty = 2)   # Upper line
+abline(h = -2 * std_dev3, col = "red", lty = 2)   # Lower line
+```
+
+#### - Both model
+```{r}
+#Get residuals and predicted values
+residuals4 <- resid(both_model)  # Get residuals
+predicted_values4 <- predict(both_model)  # Get predicted values
+
+std_dev4 <- sd(residuals4)
+outliers4 <- residuals4 > (2 * std_dev4) | residuals4 < (-2 * std_dev4)
+num_outliers4 <- sum(outliers4)
+percentage_outliers4 <- (num_outliers4 / length(residuals4)) * 100
+
+cat("Percentage of residuals that are outliers (beyond ±2 SD):", percentage_outliers4, "%\n")
+
+if (percentage_outliers4 > 5) {
+  cat("More than 5% of the residuals are outliers.\n")
+} else {
+  cat("Less than or equal to 5% of the residuals are outliers.\n")}
+
+# Step 6: Create the residual plot
+plot(predicted_values4, residuals4, 
+     ylab = "Residuals", 
+     xlab = "Fitted Values (Oral M Temp)", 
+     main = "Residual Both Plot")
+
+# Add a horizontal line at 0
+abline(h = 0, col = "red", lty = 2)
+
+# Add lines for ±2 standard deviations
+abline(h = 2 * std_dev4, col = "red", lty = 2)   # Upper line
+abline(h = -2 * std_dev4, col = "red", lty = 2)   # Lower line
+```
+
+
+# WINNER MODEL
+
+lm(formula = aveOralM ~ Max_t_face + Ambient_t + Ave_t_l_canthus_w, 
+    data = train_data)
+  
+# 5. Transformation  
+    
+###  a) Box-Cox
+Find the best transformation
+
+Based on this, Box Cox suggests to make a log transformation
+
+###### - Transformation
+```{r}
+library(MASS)
+
+# Apply Box-Cox to the model
+boxcox_result <- boxcox(forward_model, plotit = TRUE)  # plotit = FALSE suppresses the plot
+
+# Find the optimal lambda (the value of lambda that maximizes the log-likelihood)
+lm_best <- boxcox_result$x[which.max(boxcox_result$y)]
+lm_best
+
+train_data$new_var <- ifelse(lm_best == 0,
+                              log(train_data$aveOralM), 
+                              (train_data$aveOralM^lm_best - 1) /lm_best)
+
+
+model_trans = lm(new_var ~ Max_t_face + Ambient_t + Ave_t_l_canthus_w, 
+                 data = train_data)
+
+summary(model_trans)
+```
+### - Assumption for Box Cox
+```{r}
+plot(model_trans)
+```
+```{r}
+#Get residuals and predicted values
+residuals5 <- resid(model_trans)  # Get residuals
+predicted_values5 <- predict(model_trans)  # Get predicted values
+
+std_dev5 <- sd(residuals5)
+outliers5 <- residuals5 > (2 * std_dev5) | residuals5 < (-2 * std_dev5)
+num_outliers5 <- sum(outliers5)
+percentage_outliers5 <- (num_outliers5 / length(residuals5)) * 100
+
+cat("Percentage of residuals that are outliers (beyond ±2 SD):", percentage_outliers5, "%\n")
+
+if (percentage_outliers5 > 5) {
+  cat("More than 5% of the residuals are outliers.\n")
+} else {
+  cat("Less than or equal to 5% of the residuals are outliers.\n")}
+
+# Step 6: Create the residual plot
+plot(predicted_values5, residuals5, 
+     ylab = "Residuals", 
+     xlab = "Fitted Values (Oral M Temp)", 
+     main = "Residual Plot")
+
+# Add a horizontal line at 0
+abline(h = 0, col = "red", lty = 2)
+
+# Add lines for ±2 standard deviations
+abline(h = 2 * std_dev5, col = "red", lty = 2)   # Upper line
+abline(h = -2 * std_dev5, col = "red", lty = 2)   # Lower line
+```
+
+
+### b) Log
+
+```{r}
+lm_log <- lm(log(aveOralM) ~ Max_t_face + Ambient_t + Ave_t_l_canthus_w, 
+             data = train_data)
+summary(lm_log)
+```
+```{r}
+AIC(lm_log)
+```
+
+**NOTE: we cannot perform anova, since the y's do not have the same values or compare AICs
+
+
+
+
