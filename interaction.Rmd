@@ -1,0 +1,122 @@
+---
+title: "interaction"
+author: "Alexandra Schweig"
+date: "2024-12-01"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+## Rename the variables
+library(readr)
+train_data <- read_csv("train_data.csv")
+
+# Rename variables in the dataset
+colnames(train_data) <- sub("T_OR_Max_avg", "Max_t_mouth", colnames(train_data))
+colnames(train_data) <- sub("T_FHC_Max_avg", "Max_t_ext_fh", colnames(train_data))
+colnames(train_data) <- sub("T_FHBC_avg", "Ave_t_bot_fh", colnames(train_data))
+colnames(train_data) <- sub("T_FHTC_avg", "Ave_t_top_fh", colnames(train_data))
+colnames(train_data) <- sub("RCC_avg", "Ave_t_r_inner_canthus", colnames(train_data))
+colnames(train_data) <- sub("aveAllR_avg", "Ave_t_r_canthus", colnames(train_data))
+colnames(train_data) <- sub("aveAllL_avg", "Ave_t_l_canthus", colnames(train_data))
+colnames(train_data) <- sub("T_LC_Wet_avg", "Ave_t_l_canthus_w", colnames(train_data))
+colnames(train_data) <- sub("canthi4Max_avg", "Max_t_ext_canthus", colnames(train_data))
+colnames(train_data) <- sub("T_FHRC_avg", "Ave_r_left_fh", colnames(train_data))
+colnames(train_data) <- sub("T_FHLC_avg", "Ave_t_left_fh", colnames(train_data))
+colnames(train_data) <- sub("T_Max_avg", "Max_t_face", colnames(train_data))
+colnames(train_data) <- sub("Gender", "gender", colnames(train_data))
+colnames(train_data) <- sub("Age", "age", colnames(train_data))
+colnames(train_data) <- sub("Ethnicity", "ethnic", colnames(train_data))
+colnames(train_data) <- sub("Cosmetics", "cosm", colnames(train_data))
+colnames(train_data) <- sub("T_atm", "Ambient_t", colnames(train_data))
+colnames(train_data) <- sub("Humidity", "humidity", colnames(train_data))
+```
+
+
+# 1. Models types
+```{r}
+# Fit the null model (with no predictors)
+null_model <- lm(aveOralM ~ 1, data = train_data)
+
+# Fit the full model (with all explanatory variables)
+full_model <- lm(
+  aveOralM ~ Max_t_mouth + Max_t_ext_fh + Ave_t_bot_fh + Ave_t_top_fh +
+    Ave_t_r_inner_canthus + Ave_t_r_canthus + Ave_t_l_canthus + Ave_t_l_canthus_w +
+    Max_t_ext_canthus + Ave_r_left_fh + Ave_t_left_fh + Max_t_face +
+    gender + age + ethnic + cosm + Ambient_t + humidity,
+  data = train_data
+)
+
+# Forward stepwise regression
+forward_model <- step(
+  null_model,
+  scope = list(lower = ~1, upper = formula(full_model)),
+  direction = "forward",
+  trace = FALSE
+)
+```
+
+```{r}
+summary(forward_model)
+```
+```{r}
+#Interaction
+
+Interaction_model = lm(aveOralM ~ Max_t_face + Ambient_t + Ave_t_l_canthus_w + Max_t_face*Ambient_t + Max_t_face*Ave_t_l_canthus_w + Ambient_t*Ave_t_l_canthus_w, data = train_data)
+
+summary(Interaction_model)
+AIC(Interaction_model)
+
+```
+```{r}
+Interaction_model1 = lm(aveOralM ~ Max_t_face + Ambient_t + Ave_t_l_canthus_w + Max_t_face*Ambient_t, data = train_data)
+
+Interaction_model2 = lm(aveOralM ~ Max_t_face + Ambient_t + Ave_t_l_canthus_w + Max_t_face*Ave_t_l_canthus_w, data = train_data)
+
+Interaction_model3 = lm(aveOralM ~ Max_t_face + Ambient_t + Ave_t_l_canthus_w + Ambient_t*Ave_t_l_canthus_w, data = train_data)
+
+```
+
+```{r}
+summary(Interaction_model1)
+```
+
+
+```{r}
+summary(Interaction_model2)
+```
+
+
+```{r}
+```
+
+
+```{r}
+summary(Interaction_model3)
+```
+```{r}
+anova(Interaction_model, forward_model)
+anova(Interaction_model1, forward_model)
+anova(Interaction_model2, forward_model)
+anova(Interaction_model3, forward_model)
+```
+```{r}
+#AIC values
+AIC(Interaction_model)
+AIC(Interaction_model1)
+AIC(Interaction_model2)
+AIC(Interaction_model3)
+```
+```{r}
+#Multicolinearity
+library(car)
+vif(Interaction_model)
+vif(Interaction_model2)
+```
+
+
